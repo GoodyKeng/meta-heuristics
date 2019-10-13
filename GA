@@ -1,0 +1,152 @@
+##########################################################################
+#problem definition:
+#Maximizef(x,y)=cos⁡( (x-1.14)^3)-100000*(y^2-x)^2
+#constraints: 0≤x≤2; 0≤y≤3; x+y≥1	
+#Ans:Maximum=1 at (x,y)=(1,1)
+##########################################################################
+
+import numpy as np
+#np.random.seed(10)
+import math
+import matplotlib.pyplot as plt
+from matplotlib import ticker
+
+#generate location based on constraints
+def loc():
+    location = np.zeros(shape=(swarm,decisionV),dtype=float)
+    while location.all() == 0:
+        for i in range(swarm):
+            tmp = 0
+            for j in range(decisionV):
+                if j == 0:
+                    location[i,j] = np.random.uniform(0,2)
+                else:
+                    location[i,j] = np.random.uniform(0,3)
+                tmp += location[i,j]
+            if tmp <= 1:
+                for j in range(decisionV):
+                    location[i,j] = 0
+    return location
+
+#generate the velocities according to the half of constraints
+def velo():
+    vel = np.zeros(shape=(swarm,decisionV),dtype=float)
+    for i in range(swarm):
+        vel[i:,0] = np.random.uniform(-1,1)
+        vel[i:,1] = np.random.uniform(-1.5,1.5)
+    return vel
+
+#set inertia weight by linearly from 1 to 0
+def inertia_w(current_ite,iteration):
+    w_up = 1
+    w_low = 0
+    w = w_up - current_ite / iteration * (w_up - w_low)
+    return w
+
+#fitness function
+def evaluation(loc):
+    fit = []
+    for i in range(swarm):
+        t = math.cos((loc[i,0] - 1.14)**3) \
+        - 100000 * (((loc[i,1]**2)-(loc[i,0]))**2)
+        fit.append(t)
+    return np.asarray(fit)
+
+#set the pbest and gbest
+def PGbest(fit,vel):
+    pb = np.zeros(shape=(swarm,decisionV),dtype=float)
+    gb = np.zeros(shape=(decisionV),dtype=float)
+    a = np.argmax(fit)
+    for i in range(swarm):
+        for j in range(decisionV):
+            pb[i,j] = vel[i,j]
+            gb[j] = vel[a,j]
+    return pb,gb
+
+#update velocity
+def vel_update(weight,vel,gb,pb):
+    r1 = np.random.uniform(0,1)
+    r2 = np.random.uniform(0,1)
+    c1 = np.random.randint(1,4)
+    c2 = np.random.randint(1,4)
+#    #if gbest != vel, vel*(w*vel)+(r1*c1*(pbest-vel)+(r2*c2*(gbest-vel)))
+    vel = np.where(vel == gb,velocity,(weight*vel)+(r1*c1*(pb-vel)+(r2*c2*(gb-vel))))
+#    #if gbest == vel, w*vel
+    vel[vel==gb] = weight*vel[vel==gb]
+    return vel
+
+#generate new location
+def n_loc(vel,loc):
+    new_loc = np.zeros(shape=(swarm,decisionV),dtype=float)
+    for i in range(swarm):
+        tmp = 0
+        for j in range(decisionV):
+            new_loc[i,j] = loc[i,j] + vel[i,j]
+            tmp += new_loc[i,j]
+            if new_loc[i,j] < 0 or tmp < 1:
+                new_loc[i,j] = loc[i,j]
+    return new_loc
+
+#update pbest, gbest and location based on their fitness
+def GPbest_update(new_fit,fit,gb,pb,loc,new_loc,vel):
+    b = np.argmax(new_fit)
+    for i in range(swarm):
+        if new_fit[i] > fit[i]:
+                pb[i] = vel[i]
+                loc[i] = new_loc[i]
+                gb = vel[b]
+    return pb,gb,loc
+
+if __name__ == "__main__":
+    swarm = 50
+    decisionV = 2
+    iteration = 50
+    location = loc()
+    velocity = velo()
+    
+    maxfit = np.zeros(shape=(iteration),dtype=float)
+    for i in range(iteration):
+        w = inertia_w(i,iteration)
+        fitness = evaluation(location)
+        pbest,gbest = PGbest(fitness,velocity)
+        velocity = vel_update(w,velocity,gbest,pbest)
+        new_location = n_loc(velocity,location)
+        new_fitness = evaluation(new_location)
+        pbest,gbest,location = GPbest_update(new_fitness,fitness,gbest,pbest,location,new_location,velocity)
+        
+        #store all location and fitness
+        all_loc = np.append(location,new_location,axis=0)
+        allfitness= np.append(fitness,new_fitness,axis=0)
+        
+        #sort location by fitness
+        all_loc = all_loc[np.argsort(-allfitness)]
+        allfitness = allfitness[np.argsort(-allfitness)]
+        location = all_loc[:50,:]
+        
+        rec = np.arange(0,iteration)
+        maxfit[i] = max(new_fitness)
+print('new_F:\n',max(new_fitness))
+print('fitness:\n',max(fitness))
+print('location:\n',location[0])
+
+#result visualization
+fig , ax = plt.subplots()
+for axis in [ax.xaxis]:
+    axis.set_major_locator(ticker.MaxNLocator(integer=True))
+x = np.arange(0, iteration)
+y = np.array(maxfit)
+l1, = plt.plot(x, y)
+current = 0
+total_Best_FV = []
+for fitness_val in maxfit:
+    if fitness_val > current: # > For maximum problem
+        current = fitness_val
+    total_Best_FV.append(current)
+x_c = np.arange(0, iteration)
+y_c = np.array(total_Best_FV)
+l2, = plt.plot(x_c, y_c)
+plt.xlabel('ith iteration')
+plt.ylabel('Fitness Value')
+plt.legend([l1, l2], ['Current Best', 'Global Best'], loc = 'lower right')
+plt.show()
+        
