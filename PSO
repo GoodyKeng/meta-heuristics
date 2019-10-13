@@ -69,9 +69,9 @@ def vel_update(weight,vel,gb,pb):
     r2 = np.random.uniform(0,1)
     c1 = np.random.randint(1,4)
     c2 = np.random.randint(1,4)
-#    #if gbest != vel, vel*(w*vel)+(r1*c1*(pbest-vel)+(r2*c2*(gbest-vel)))
+    #if gbest != vel, vel*(w*vel)+(r1*c1*(pbest-vel)+(r2*c2*(gbest-vel)))
     vel = np.where(vel == gb,velocity,(weight*vel)+(r1*c1*(pb-vel)+(r2*c2*(gb-vel))))
-#    #if gbest == vel, w*vel
+    #if gbest == vel, w*vel
     vel[vel==gb] = weight*vel[vel==gb]
     return vel
 
