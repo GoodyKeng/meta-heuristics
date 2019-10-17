@@ -8,6 +8,7 @@
 import numpy as np
 #np.random.seed(10)
 import matplotlib.pyplot as plt
+from matplotlib import ticker
 
 #initialize chromosome within constraint
 def init_chrom():
@@ -103,19 +104,15 @@ def comparison():
     return all_chrom[np.argsort(-all_fitness)][:population,:]
 
 if __name__ == "__main__":
-    iteration=1000
+    iteration=100
     population = 10
     n_var = 2
     chrom = init_chrom()
-    #record fitness local optima
-    local_op = []
-    #record fitness local optima
-    global_op = []
+    #record all max fitness
+    maxfit = np.zeros(shape=(iteration),dtype=float)
     for z in range(iteration):
         fitness = evaluation(chrom)
-        print('fitness',fitness)
-        local_op.append(np.min(fitness))
-        global_op.append(np.max(fitness))
+#        print('fitness',fitness)
         n_fitness = N_fit(fitness)
         #sum all fitness to do roulette wheel
         total_fitness = sum(n_fitness)
@@ -128,11 +125,28 @@ if __name__ == "__main__":
         #offspring fitness
         offspring_fitness = evaluation(offspring)
         chrom = comparison()
-    print(chrom[np.argmax(fitness)])
+        maxfit[z] = max(offspring_fitness)
+    print('fitness:\n',max(fitness))
+    print('chromosome:\n',chrom[np.argmax(fitness)])
     
-    #result visulization
-    plt.plot(local_op)
-    plt.plot(global_op)
-    plt.xlabel('iteration')
-    plt.ylabel('fitness')
+    #result visualization
+    fig , ax = plt.subplots()
+    for axis in [ax.xaxis]:
+        axis.set_major_locator(ticker.MaxNLocator(integer=True))
+    x = np.arange(0, iteration)
+    y = np.array(maxfit)
+    l1, = plt.plot(x, y)
+    current = 0
+    total_Best_FV = []
+    for fitness_val in maxfit:
+        if fitness_val > current: # > For maximum problem
+            current = fitness_val
+        total_Best_FV.append(current)
+    x_c = np.arange(0, iteration)
+    y_c = np.array(total_Best_FV)
+    l2, = plt.plot(x_c, y_c)
     plt.suptitle('GA')
+    plt.xlabel('ith iteration')
+    plt.ylabel('Fitness Value')
+    plt.legend([l1, l2], ['Current Best', 'Global Best'], loc = 'lower right')
+    plt.show()
