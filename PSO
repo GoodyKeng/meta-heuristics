@@ -65,27 +65,50 @@ def PGbest(fit,vel):
 
 #update velocity
 def vel_update(weight,vel,gb,pb):
+    vel = vel.copy()
     r1 = np.random.uniform(0,1)
     r2 = np.random.uniform(0,1)
     c1 = np.random.randint(1,4)
     c2 = np.random.randint(1,4)
-    #if gbest != vel, vel*(w*vel)+(r1*c1*(pbest-vel)+(r2*c2*(gbest-vel)))
-    vel = np.where(vel == gb,velocity,(weight*vel)+(r1*c1*(pb-vel)+(r2*c2*(gb-vel))))
-    #if gbest == vel, w*vel
-    vel[vel==gb] = weight*vel[vel==gb]
+
+    for i in range(swarm):
+        for j in range(decisionV):
+            if gb[j] == vel[i,j]:
+                vel[i,j] = weight * vel[i,j]
+            else:
+                vel[i,j] = (weight * vel[i,j]) + \
+                (r1 * c1 * pb[i,j] - vel[i,j]) + \
+                (r2 * c2 * gb[j] - vel[i,j])
     return vel
 
 #generate new location
 def n_loc(vel,loc):
     new_loc = np.zeros(shape=(swarm,decisionV),dtype=float)
+    lower = 0
+    x_upper = 2
+    y_upper = 3
+    xy_sum = 1
     for i in range(swarm):
         tmp = 0
         for j in range(decisionV):
             new_loc[i,j] = loc[i,j] + vel[i,j]
             tmp += new_loc[i,j]
             #constraint handling-->bouncing strategy------------------------
-            if new_loc[i,j] < 0 or tmp < 1:
+            r = np.random.rand()
+            if new_loc[i,j] < lower or tmp < xy_sum:
+                d = (abs(loc[i,j]-lower)*r)
                 new_loc[i,j] = loc[i,j]
+                new_loc[i,j] = loc[i,j] + d
+            
+            elif new_loc[i,0] > x_upper:
+                d = (abs(loc[i:,0]-x_upper)*r)
+                new_loc[i:,0] = loc[i:,0]
+                new_loc[i:,0] = loc[i:,0] + d
+                
+            elif new_loc[i,1] > y_upper:
+                d = (abs(loc[i:,1]-y_upper)*r)
+                new_loc[i:,1] = loc[i:,1]
+                new_loc[i:,1] = loc[i:,1] + d
     return new_loc
 
 #update pbest, gbest and location based on their fitness
@@ -99,9 +122,9 @@ def GPbest_update(new_fit,fit,gb,pb,loc,new_loc,vel):
     return pb,gb,loc
 
 if __name__ == "__main__":
-    swarm = 50
+    swarm = 10
     decisionV = 2
-    iteration = 50
+    iteration = 1000
     location = loc()
     velocity = velo()
     
@@ -122,8 +145,8 @@ if __name__ == "__main__":
         #sort location by fitness
         all_loc = all_loc[np.argsort(-allfitness)]
         allfitness = allfitness[np.argsort(-allfitness)]
-        location = all_loc[:50,:]
-        
+        location = all_loc[:swarm,:]
+#        
         rec = np.arange(0,iteration)
         maxfit[i] = max(new_fitness)
 print('new_F:\n',max(new_fitness))
