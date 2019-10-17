@@ -124,7 +124,7 @@ def GPbest_update(new_fit,fit,gb,pb,loc,new_loc,vel):
 if __name__ == "__main__":
     swarm = 10
     decisionV = 2
-    iteration = 1000
+    iteration = 100
     location = loc()
     velocity = velo()
     
@@ -146,31 +146,30 @@ if __name__ == "__main__":
         all_loc = all_loc[np.argsort(-allfitness)]
         allfitness = allfitness[np.argsort(-allfitness)]
         location = all_loc[:swarm,:]
-#        
-        rec = np.arange(0,iteration)
-        maxfit[i] = max(new_fitness)
-print('new_F:\n',max(new_fitness))
-print('fitness:\n',max(fitness))
-print('location:\n',location[0])
-
-#result visualization
-fig , ax = plt.subplots()
-for axis in [ax.xaxis]:
-    axis.set_major_locator(ticker.MaxNLocator(integer=True))
-x = np.arange(0, iteration)
-y = np.array(maxfit)
-l1, = plt.plot(x, y)
-current = 0
-total_Best_FV = []
-for fitness_val in maxfit:
-    if fitness_val > current: # > For maximum problem
-        current = fitness_val
-    total_Best_FV.append(current)
-x_c = np.arange(0, iteration)
-y_c = np.array(total_Best_FV)
-l2, = plt.plot(x_c, y_c)
-plt.xlabel('ith iteration')
-plt.ylabel('Fitness Value')
-plt.legend([l1, l2], ['Current Best', 'Global Best'], loc = 'lower right')
-plt.show()
         
+        maxfit[i] = max(new_fitness)
+    
+    print('fitness:\n',max(fitness))
+    print('location:\n',location[0])
+
+    #result visualization
+    fig , ax = plt.subplots()
+    for axis in [ax.xaxis]:
+        axis.set_major_locator(ticker.MaxNLocator(integer=True))
+    x = np.arange(0, iteration)
+    y = np.array(maxfit)
+    l1, = plt.plot(x, y)
+    current = 0
+    total_Best_FV = []
+    for fitness_val in maxfit:
+        if fitness_val > current: # > For maximum problem
+            current = fitness_val
+        total_Best_FV.append(current)
+    x_c = np.arange(0, iteration)
+    y_c = np.array(total_Best_FV)
+    l2, = plt.plot(x_c, y_c)
+    plt.suptitle('PSO')
+    plt.xlabel('ith iteration')
+    plt.ylabel('Fitness Value')
+    plt.legend([l1, l2], ['Current Best', 'Global Best'], loc = 'lower right')
+    plt.show()
