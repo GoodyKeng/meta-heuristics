@@ -83,6 +83,7 @@ def n_loc(vel,loc):
         for j in range(decisionV):
             new_loc[i,j] = loc[i,j] + vel[i,j]
             tmp += new_loc[i,j]
+            #constraint handling-->bouncing strategy------------------------
             if new_loc[i,j] < 0 or tmp < 1:
                 new_loc[i,j] = loc[i,j]
     return new_loc
